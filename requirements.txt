@@ -1,0 +1,31 @@
+# Core
+streamlit>=1.35.0
+python-dotenv>=1.0.0
+
+# PDF Extraction
+pymupdf>=1.24.0          # fitz — fast PDF text + image extraction
+pdfplumber>=0.11.0        # table-aware text extraction fallback
+
+# OCR
+pytesseract>=0.3.10
+Pillow>=10.3.0
+opencv-python-headless>=4.9.0
+
+# Chunking / NLP
+tiktoken>=0.7.0
+langchain-text-splitters>=0.2.0
+
+# Embeddings
+sentence-transformers>=3.0.0
+torch>=2.3.0
+
+# Vector Store
+faiss-cpu>=1.8.0
+numpy>=1.26.0
+
+# LLM
+google-generativeai>=0.8.0
+
+# Utilities
+tqdm>=4.66.0
+loguru>=0.7.2
