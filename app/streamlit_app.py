@@ -208,7 +208,7 @@ with tab_query:
                 help="Upload an image — its text will be included in the query.",
             )
             if query_image:
-                st.image(query_image, use_column_width=True)
+                st.image(query_image, use_container_width=True)
 
         top_k = st.slider("Number of context chunks", min_value=1, max_value=10, value=5)
 

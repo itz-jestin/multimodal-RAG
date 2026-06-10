@@ -15,12 +15,14 @@ from loguru import logger
 from PIL import Image
 
 
+pytesseract.pytesseract.tesseract_cmd = (r"C:\Program Files\Tesseract-OCR\tesseract.exe")
+
 # ── public API ────────────────────────────────────────────────────────────────
 
 def ocr_image(
     image: Image.Image | str | Path,
     *,
-    lang: str = "eng",
+    lang: str = "eng+hin",
     preprocess: bool = True,
 ) -> str:
     """
@@ -39,12 +41,17 @@ def ocr_image(
     if preprocess:
         pil_img = _preprocess(pil_img)
 
-    custom_config = r"--oem 3 --psm 6"
+    custom_config = r'--oem 3 --psm 6'
     try:
         text: str = pytesseract.image_to_string(pil_img, lang=lang, config=custom_config)
         text = text.strip()
         logger.debug(f"OCR returned {len(text)} characters")
         return text
+    
+    except pytesseract.TesseractNotFoundError:
+        logger.error("Tesseract is not installed or not found in PATH")
+        return ""
+    
     except pytesseract.TesseractError as exc:
         logger.error(f"Tesseract error: {exc}")
         return ""
@@ -83,15 +90,26 @@ def _preprocess(pil_img: Image.Image) -> Image.Image:
     img_array = np.array(pil_img)
     gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
 
+     # ── upscale if image is small ──
+    h, w = gray.shape
+    if w < 1000:
+        scale = 2.0
+        gray = cv2.resize(gray, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+
     # ── denoise ──
     denoised = cv2.fastNlMeansDenoising(gray, h=10)
 
+    # ── CLAHE contrast enhancement ──
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    enhanced = clahe.apply(denoised)
+
+
     # ── adaptive threshold (handles uneven lighting) ──
     binary = cv2.adaptiveThreshold(
-        denoised, 255,
+        enhanced, 255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY,
-        blockSize=11, C=2,
+        blockSize=31, C=10,
     )
 
     # ── deskew ──
